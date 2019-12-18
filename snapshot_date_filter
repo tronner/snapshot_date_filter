@@ -81,6 +81,9 @@ def parse_reten_spec(reten_str):
             )
             sys.exit(1)
         result[key] = amount
+    if not result:
+        sys.stdout.write(f"Error: empty reten spec!\n")
+        sys.exit(1)
     return result
 
 def datefilter(snapnames, fmt):
