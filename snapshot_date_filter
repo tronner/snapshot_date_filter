@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""snapshot_date_filter
+
+Reads a date sorted list of snapshots on stdin, writes the snapshots
+to keep or remove to stdout. Removed snapshots are printed in reverse
+sorted order.
+
+Usage:
+  snapshot_date_filter (keep|remove) -f <fmt> -r <reten>
+
+Options:
+  -h --help     Show this message
+  --version     Show version
+  -f <fmt>      Date format string
+  -r <reten>    Retention specification
+
+Example:
+  This example lists all zfs snapshots for mypool/data1, determines which
+  snapshots to remove by running this script, and destroying those snapshots:
+
+  zfs list -r -t snapshot -H -o name mypool/data1 \\
+      | snapshot_date_filter remove -f "mypool/data1@auto-%Y-%m-%d_%H.%M" -r "days 7 weeks 4 months 12 years 3" \\
+      | xargs zfs destroy
+
+"""
+import sys
+from datetime import datetime, timedelta
+from docopt import docopt
+
+reten_keywords = (
+    ("minutes", 60),
+    ("5mins", 300),
+    ("10mins", 600),
+    ("15mins", 900),
+    ("30mins", 1800),
+    ("hours", 3600),
+    ("days", 3600*24),
+    ("weeks", 3600*24*7),
+    ("months", 3600*24*30),
+    ("years", 3600*24*365)
+)
+
+def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
+    keepages = {
+        timedelta(seconds=i*seconds)
+        for keyword, seconds in reten_keywords
+        for i in range(1, reten.get(keyword, 0)+1)
+    }
+    isnap = iter(snapdates)
+    finished = False
+    for age in sorted(keepages, reverse=True):
+        while not finished:
+            try:
+                snap = next(isnap)
+            except StopIteration:
+                finished = True
+                break
+            if now - snap <= age:
+                yield snap
+                break
+
+def to_remove(snapdates, reten, now=datetime.utcnow()):
+    return set(snapdates) - set(gen_keepsnaps(snapdates, archivereten))
+
+def to_keep(snapdates, reten, now=datetime.utcnow()):
+    return set(gen_keepsnaps(snapdates, archivereten))
+
+def parse_reten_spec(reten_str):
+    tokens = reten_str.split()
+    if len(tokens)%2 != 0:
+        sys.stderr.write("Even numbers of words in reten spec required!\n")
+        sys.exit(1)
+
+    result = {}
+    reten_dict = dict(reten_keywords)
+    for key, val in zip(*[iter(tokens)]*2):
+        if key not in reten_dict:
+            sys.stderr.write(f"reten interval '{key}' unknown; valid values: {','.join(reten_dict)}\n")
+            sys.exit(1)
+        try:
+            amount = int(val)
+        except ValueError:
+            sys.stderr.write(f"reten value '{val}' for interval '{key}' is invalid\n")
+            sys.exit(1)
+        result[key] = amount
+    return result
+
+if __name__ == "__main__":
+    args = docopt(__doc__, version='snapshot_date_filter 0.1')
+    fmt = args["-f"]
+    reten = parse_reten_spec(args["-r"])
+    input_snapnames = sys.stdin.read().split("\n")
+    input_snapdates = []
+    for snapname in input_snapnames:
+        try:
+            input_snapdates.append(datetime.strptime(snapname, fmt))
+        except ValueError:
+            # ignore snapshots that don't match the date format
+            pass
+    keepsnaps = gen_keepsnaps(input_snapdates, reten)
+    if args["keep"]:
+        output_snapdates = sorted(list(keepsnaps))
+    else:
+        output_snapdates = sorted(set(input_snapdates) - set(keepsnaps), reverse=True)
+    for snapdate in output_snapdates:
+        print(datetime.strftime(snapdate, fmt))
