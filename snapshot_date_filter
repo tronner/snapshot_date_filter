@@ -5,7 +5,8 @@ Reads a date sorted list of snapshots on stdin, writes the snapshots to keep
 or remove to stdout. Removed snapshots are printed in reverse sorted order.
 
 Usage:
-  snapshot_date_filter (keep|remove) -f <fmt> -r <reten>
+  snapshot_date_filter (keep | remove) -f <fmt> -r <reten>
+  snapshot_date_filter (-h | --help | --version)
 
 Options:
   -h --help     Show this message
