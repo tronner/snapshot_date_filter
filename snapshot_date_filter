@@ -19,7 +19,7 @@ Example:
   snapshots to remove by running this script, and destroying those snapshots:
 
   zfs list -r -t snapshot -H -o name mypool/data1 \\
-      | snapshot_date_filter remove -f "mypool/data1@auto-%Y-%m-%d_%H.%M" -r "days 7 weeks 4 months 12 years 3" \\
+      | snapshot_date_filter remove -f "mypool/data1@auto-%Y-%m-%d_%H.%M" -r "day 7 week 4 month 12 year 3" \\
       | xargs zfs destroy
 
 """
@@ -28,16 +28,16 @@ from datetime import datetime, timedelta
 from docopt import docopt
 
 reten_keywords = {
-    "minutes": 60,
-    "5mins": 300,
-    "10mins": 600,
-    "15mins": 900,
-    "30mins": 1800,
-    "hours": 3600,
-    "days": 3600*24,
-    "weeks": 3600*24*7,
-    "months": 3600*24*30,
-    "years": 3600*24*365,
+    "minute": 60,
+    "5min": 300,
+    "10min": 600,
+    "15min": 900,
+    "30min": 1800,
+    "hour": 3600,
+    "day": 3600*24,
+    "week": 3600*24*7,
+    "month": 3600*24*30,
+    "year": 3600*24*365,
 }
 
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
