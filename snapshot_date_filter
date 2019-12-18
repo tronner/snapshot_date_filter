@@ -75,12 +75,17 @@ def parse_reten_spec(reten_str):
     reten_dict = dict(reten_keywords)
     for key, val in zip(*[iter(tokens)]*2):
         if key not in reten_dict:
-            sys.stderr.write(f"reten interval '{key}' unknown; valid values: {','.join(reten_dict)}\n")
+            sys.stderr.write(
+                f"reten interval '{key}' unknown; "
+                f"valid values: {','.join(reten_dict)}\n"
+            )
             sys.exit(1)
         try:
             amount = int(val)
         except ValueError:
-            sys.stderr.write(f"reten value '{val}' for interval '{key}' is invalid\n")
+            sys.stderr.write(
+                f"reten value '{val}' for interval '{key}' is invalid\n"
+            )
             sys.exit(1)
         result[key] = amount
     return result
