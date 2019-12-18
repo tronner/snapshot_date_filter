@@ -83,18 +83,20 @@ def parse_reten_spec(reten_str):
         result[key] = amount
     return result
 
+def datefilter(snapnames, fmt):
+    for snapname in input_snapnames:
+        try:
+            yield datetime.strptime(snapname, fmt)
+        except ValueError:
+            # ignore snapshots that don't match the date format
+            pass
+
 if __name__ == "__main__":
     args = docopt(__doc__, version='snapshot_date_filter 0.1')
     fmt = args["-f"]
     reten = parse_reten_spec(args["-r"])
     input_snapnames = sys.stdin.read().split("\n")
-    input_snapdates = []
-    for snapname in input_snapnames:
-        try:
-            input_snapdates.append(datetime.strptime(snapname, fmt))
-        except ValueError:
-            # ignore snapshots that don't match the date format
-            pass
+    input_snapdates = datefilter(input_snapnames, fmt)
     keepsnaps = gen_keepsnaps(input_snapdates, reten)
     if args["keep"]:
         output_snapdates = sorted(list(keepsnaps))
