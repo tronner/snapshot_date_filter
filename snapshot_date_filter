@@ -46,17 +46,16 @@ def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
         for i in range(1, reten.get(keyword, 0)+1)
     }
     isnap = iter(snapdates)
-    finished = False
-    for age in sorted(keepages, reverse=True):
-        while not finished:
-            try:
+    try:
+        for age in sorted(keepages, reverse=True):
+            while True:
                 snap = next(isnap)
-            except StopIteration:
-                finished = True
-                break
-            if now - snap <= age:
-                yield snap
-                break
+                if now - snap <= age:
+                    yield snap
+                    break
+    except StopIteration:
+        # no more snapshots; we're finished
+        pass
 
 def parse_reten_spec(reten_str):
     tokens = reten_str.split()
