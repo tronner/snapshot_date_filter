@@ -11,7 +11,8 @@ Options:
   -h --help     Show this message
   --version     Show version
   -f <fmt>      Date format string
-  -r <reten>    Retention specification
+  -r <reten>    Retention specification (see example below and source code
+                for a list of valid intervals)
 
 Example:
   This example lists all zfs snapshots for mypool/data1, determines which
