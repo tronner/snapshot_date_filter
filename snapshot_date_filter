@@ -26,23 +26,23 @@ import sys
 from datetime import datetime, timedelta
 from docopt import docopt
 
-reten_keywords = (
-    ("minutes", 60),
-    ("5mins", 300),
-    ("10mins", 600),
-    ("15mins", 900),
-    ("30mins", 1800),
-    ("hours", 3600),
-    ("days", 3600*24),
-    ("weeks", 3600*24*7),
-    ("months", 3600*24*30),
-    ("years", 3600*24*365)
-)
+reten_keywords = {
+    "minutes": 60,
+    "5mins": 300,
+    "10mins": 600,
+    "15mins": 900,
+    "30mins": 1800,
+    "hours": 3600,
+    "days": 3600*24,
+    "weeks": 3600*24*7,
+    "months": 3600*24*30,
+    "years": 3600*24*365,
+}
 
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
     keepages = {
         timedelta(seconds=i*seconds)
-        for keyword, seconds in reten_keywords
+        for keyword, seconds in reten_keywords.items()
         for i in range(1, reten.get(keyword, 0)+1)
     }
     isnap = iter(snapdates)
@@ -65,9 +65,8 @@ def parse_reten_spec(reten_str):
         sys.exit(1)
 
     result = {}
-    reten_dict = dict(reten_keywords)
     for key, val in zip(*[iter(tokens)]*2):
-        if key not in reten_dict:
+        if key not in reten_keywords:
             sys.stderr.write(
                 f"reten interval '{key}' unknown; "
                 f"valid values: {','.join(reten_dict)}\n"
