@@ -75,6 +75,8 @@ def parse_reten_spec(reten_str):
             sys.exit(1)
         try:
             amount = int(val)
+            if amount < 1:
+                raise ValueError
         except ValueError:
             sys.stderr.write(
                 f"reten value '{val}' for interval '{key}' is invalid\n"
