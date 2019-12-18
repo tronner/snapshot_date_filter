@@ -70,7 +70,7 @@ def parse_reten_spec(reten_str):
         if key not in reten_keywords:
             sys.stderr.write(
                 f"reten interval '{key}' unknown; "
-                f"valid values: {','.join(reten_dict)}\n"
+                f"valid values: {','.join(reten_keywords)}\n"
             )
             sys.exit(1)
         try:
