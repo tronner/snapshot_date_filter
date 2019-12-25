@@ -101,7 +101,7 @@ if __name__ == "__main__":
     fmt = args["-f"]
     reten = parse_reten_spec(args["-r"])
     input_snapnames = sys.stdin.read().split("\n")
-    input_snapdates = datefilter(input_snapnames, fmt)
+    input_snapdates = list(datefilter(input_snapnames, fmt))
     keepsnaps = gen_keepsnaps(input_snapdates, reten)
     if args["keep"]:
         output_snapdates = sorted(list(keepsnaps))
