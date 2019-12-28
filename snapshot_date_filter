@@ -5,15 +5,16 @@ Reads a date sorted list of snapshots on stdin, writes the snapshots to keep
 or remove to stdout. Removed snapshots are printed in reverse sorted order.
 
 Usage:
-  snapshot_date_filter (keep | remove) -f <fmt> -r <reten>
+  snapshot_date_filter (keep | remove) [-l | --keep-latest] -f <fmt> -r <reten>
   snapshot_date_filter (-h | --help | --version)
 
 Options:
-  -h --help     Show this message
-  --version     Show version
-  -f <fmt>      Date format string
-  -r <reten>    Retention specification (see example below and source code
-                for a list of valid intervals)
+  -h, --help          Show this message
+  --version           Show version
+  -f <fmt>            Date format string
+  -l, --keep-latest   Always keep latest snapshot
+  -r <reten>          Retention specification (see example below and source code
+                      for a list of valid intervals)
 
 Example:
   This example lists all zfs snapshots for mypool/data1, determines which
@@ -100,12 +101,26 @@ if __name__ == "__main__":
     args = docopt(__doc__, version='snapshot_date_filter 0.1')
     fmt = args["-f"]
     reten = parse_reten_spec(args["-r"])
+    keep_latest = args["--keep-latest"]
     input_snapnames = sys.stdin.read().split("\n")
     input_snapdates = list(datefilter(input_snapnames, fmt))
     keepsnaps = gen_keepsnaps(input_snapdates, reten)
+    try:
+        latest = input_snapdates[-1]
+    except KeyError:
+        # empty input; nothing to do
+        sys.exit(0)
+
     if args["keep"]:
         output_snapdates = sorted(list(keepsnaps))
+        if keep_latest and latest not in output_snapdates:
+            output_snapdates.append(latest)
     else:
-        output_snapdates = sorted(set(input_snapdates) - set(keepsnaps), reverse=True)
+        output_snapdates = sorted(set(input_snapdates) - set(keepsnaps))
+        if keep_latest and latest in output_snapdates:
+            assert latest == output_snapdates[-1]
+            output_snapdates.pop()
+        output_snapdates.reverse()
+
     for snapdate in output_snapdates:
         print(datetime.strftime(snapdate, fmt))
