@@ -103,7 +103,7 @@ if __name__ == "__main__":
     reten = parse_reten_spec(args["-r"])
     keep_latest = args["--keep-latest"]
     input_snapnames = sys.stdin.read().split("\n")
-    input_snapdates = list(datefilter(input_snapnames, fmt))
+    input_snapdates = sorted(list(datefilter(input_snapnames, fmt)))
     keepsnaps = gen_keepsnaps(input_snapdates, reten)
     try:
         latest = input_snapdates[-1]
