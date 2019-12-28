@@ -107,7 +107,7 @@ if __name__ == "__main__":
     keepsnaps = gen_keepsnaps(input_snapdates, reten)
     try:
         latest = input_snapdates[-1]
-    except KeyError:
+    except IndexError:
         # empty input; nothing to do
         sys.exit(0)
 
