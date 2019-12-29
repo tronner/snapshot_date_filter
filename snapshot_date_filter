@@ -90,7 +90,7 @@ def parse_reten_spec(reten_str):
     return result
 
 def parse_dates(snapnames, fmt):
-    for snapname in input_snapnames:
+    for snapname in snapnames:
         try:
             yield datetime.strptime(snapname, fmt)
         except ValueError:
