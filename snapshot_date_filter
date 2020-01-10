@@ -48,9 +48,9 @@ def error_exit(message):
 
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
     keepages = {
-        timedelta(seconds=i*seconds)
-        for keyword, seconds in reten_keywords.items()
-        for i in range(1, reten.get(keyword, 0)+1)
+        timedelta(seconds=i*reten_keywords[keyword])
+        for keyword, amount in reten.items()
+        for i in range(1, amount+1)
     }
     isnap = iter(snapdates)
     try:
