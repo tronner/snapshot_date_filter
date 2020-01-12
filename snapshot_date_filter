@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     input_snapnames = sys.stdin.read().split("\n")
     input_snapdates = sorted(list(parse_dates(input_snapnames, fmt)))
-    keepsnaps = gen_keepsnaps(input_snapdates, reten)
+    keepsnaps = set(gen_keepsnaps(input_snapdates, reten))
     try:
         latest = set(keep_latest * [input_snapdates[-1]])
     except IndexError:
@@ -117,10 +117,10 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if keep:
-        output_snapdates = sorted(set(keepsnaps) | latest)
+        output_snapdates = sorted(keepsnaps | latest)
     else:
         output_snapdates = sorted(
-            set(input_snapdates) - set(keepsnaps) - latest,
+            set(input_snapdates) - keepsnaps - latest,
             reverse=True
         )
 
