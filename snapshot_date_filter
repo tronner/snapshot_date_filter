@@ -75,9 +75,9 @@ def parse_reten_spec(reten_str):
         try:
             val = next(tokens)
         except StopIteration:
-            error_exit("even numbers of words in reten spec required")
+            raise ValueError("even numbers of words in reten spec required")
         if interval not in reten_intervals:
-            error_exit(
+            raise ValueError(
                 f"reten interval '{interval}' unknown\n"
                 f"Valid values: {', '.join(reten_intervals)}"
             )
@@ -86,12 +86,12 @@ def parse_reten_spec(reten_str):
             if amount < 1:
                 raise ValueError
         except ValueError:
-            error_exit(
+            raise ValueError(
                 f"reten value '{val}' for interval '{interval}' is invalid"
             )
         result[interval] = amount
     if not result:
-        error_exit("empty reten spec")
+        raise ValueError("empty reten spec")
     return result
 
 def parse_dates(snapnames, fmt):
@@ -105,7 +105,10 @@ def parse_dates(snapnames, fmt):
 if __name__ == "__main__":
     args = docopt(__doc__, version='snapshot_date_filter 0.1')
     fmt = args["-f"]
-    reten = parse_reten_spec(args["-r"])
+    try:
+        reten = parse_reten_spec(args["-r"])
+    except ValueError as e:
+        error_exit(e)
     keep_latest = args["--keep-latest"]
     keep = args["keep"]
 
