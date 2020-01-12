@@ -65,13 +65,17 @@ def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
         pass
 
 def parse_reten_spec(reten_str):
-    tokens = reten_str.split()
-    if len(tokens)%2 != 0:
-        sys.stderr.write("Even numbers of words in reten spec required!\n")
-        sys.exit(1)
-
+    tokens = iter(reten_str.split())
     result = {}
-    for key, val in zip(*[iter(tokens)]*2):
+    while True:
+        try:
+            key = next(tokens)
+        except StopIteration:
+            break
+        try:
+            val = next(tokens)
+        except StopIteration:
+            error_exit("Even numbers of words in reten spec required")
         if key not in reten_keywords:
             error_exit(
                 f"reten interval '{key}' unknown\n"
