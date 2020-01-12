@@ -43,7 +43,7 @@ reten_keywords = {
 }
 
 def error_exit(message):
-    sys.stderr.write(message+"\n")
+    sys.stderr.write(f"Error: {message}\n")
     sys.exit(1)
 
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
@@ -75,7 +75,7 @@ def parse_reten_spec(reten_str):
         try:
             val = next(tokens)
         except StopIteration:
-            error_exit("Even numbers of words in reten spec required")
+            error_exit("even numbers of words in reten spec required")
         if key not in reten_keywords:
             error_exit(
                 f"reten interval '{key}' unknown\n"
@@ -89,7 +89,7 @@ def parse_reten_spec(reten_str):
             error_exit(f"reten value '{val}' for interval '{key}' is invalid")
         result[key] = amount
     if not result:
-        error_exit("Error: empty reten spec")
+        error_exit("empty reten spec")
     return result
 
 def parse_dates(snapnames, fmt):
