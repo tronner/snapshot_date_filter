@@ -42,6 +42,10 @@ reten_keywords = {
     "year": 3600*24*365,
 }
 
+def error_exit(message):
+    sys.stderr.write(message+"\n")
+    sys.exit(1)
+
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
     keepages = {
         timedelta(seconds=i*seconds)
@@ -69,24 +73,19 @@ def parse_reten_spec(reten_str):
     result = {}
     for key, val in zip(*[iter(tokens)]*2):
         if key not in reten_keywords:
-            sys.stderr.write(
-                f"reten interval '{key}' unknown; "
-                f"valid values: {','.join(reten_keywords)}\n"
+            error_exit(
+                f"reten interval '{key}' unknown\n"
+                f"Valid values: {', '.join(reten_keywords)}"
             )
-            sys.exit(1)
         try:
             amount = int(val)
             if amount < 1:
                 raise ValueError
         except ValueError:
-            sys.stderr.write(
-                f"reten value '{val}' for interval '{key}' is invalid\n"
-            )
-            sys.exit(1)
+            error_exit(f"reten value '{val}' for interval '{key}' is invalid")
         result[key] = amount
     if not result:
-        sys.stdout.write(f"Error: empty reten spec!\n")
-        sys.exit(1)
+        error_exit("Error: empty reten spec")
     return result
 
 def parse_dates(snapnames, fmt):
