@@ -103,7 +103,7 @@ def parse_dates(snapnames, fmt):
             pass
 
 def date_filter(keep, input_snapdates, reten, keep_latest):
-    keepsnaps = set(gen_keepsnaps(input_snapdates, reten))
+    keepsnaps = set(gen_keepsnaps(sorted(list(input_snapdates)), reten))
     try:
         latest = set(keep_latest * [input_snapdates[-1]])
     except IndexError:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     keep = args["keep"]
     input_snapnames = sys.stdin.read().split("\n")
 
-    input_snapdates = sorted(list(parse_dates(input_snapnames, fmt)))
+    input_snapdates = parse_dates(input_snapnames, fmt)
     output_snapdates = date_filter(keep, input_snapdates, reten, keep_latest)
 
     for snapdate in output_snapdates:
