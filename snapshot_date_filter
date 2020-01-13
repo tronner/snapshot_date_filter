@@ -102,6 +102,19 @@ def parse_dates(snapnames, fmt):
             # ignore snapshots that don't match the date format
             pass
 
+def date_filter(keep, input_snapdates, reten, keep_latest):
+    keepsnaps = set(gen_keepsnaps(input_snapdates, reten))
+    try:
+        latest = set(keep_latest * [input_snapdates[-1]])
+    except IndexError:
+        # empty input; nothing to do
+        return []
+
+    if keep:
+        return sorted(keepsnaps | latest)
+    else:
+        return sorted(set(input_snapdates) - keepsnaps - latest, reverse=True)
+
 if __name__ == "__main__":
     args = docopt(__doc__, version='snapshot_date_filter 0.1')
     fmt = args["-f"]
@@ -111,23 +124,10 @@ if __name__ == "__main__":
         error_exit(e)
     keep_latest = args["--keep-latest"]
     keep = args["keep"]
-
     input_snapnames = sys.stdin.read().split("\n")
-    input_snapdates = sorted(list(parse_dates(input_snapnames, fmt)))
-    keepsnaps = set(gen_keepsnaps(input_snapdates, reten))
-    try:
-        latest = set(keep_latest * [input_snapdates[-1]])
-    except IndexError:
-        # empty input; nothing to do
-        sys.exit(0)
 
-    if keep:
-        output_snapdates = sorted(keepsnaps | latest)
-    else:
-        output_snapdates = sorted(
-            set(input_snapdates) - keepsnaps - latest,
-            reverse=True
-        )
+    input_snapdates = sorted(list(parse_dates(input_snapnames, fmt)))
+    output_snapdates = date_filter(keep, input_snapdates, reten, keep_latest)
 
     for snapdate in output_snapdates:
         print(datetime.strftime(snapdate, fmt))
