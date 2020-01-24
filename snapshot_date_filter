@@ -42,27 +42,37 @@ reten_intervals = {
     "year": 3600*24*365,
 }
 
+
 def error_exit(message):
     sys.stderr.write(f"Error: {message}\n")
     sys.exit(1)
 
+
 def gen_keepsnaps(snapdates, reten, now=datetime.utcnow()):
-    keepages = {
+    keepages = sorted({
         timedelta(seconds=i*reten_intervals[interval])
         for interval, amount in reten.items()
         for i in range(1, amount+1)
-    }
-    isnap = iter(snapdates)
-    try:
-        for age in sorted(keepages, reverse=True):
-            while True:
-                snap = next(isnap)
-                if now - snap <= age:
-                    yield snap
-                    break
-    except StopIteration:
-        # no more snapshots; we're finished
-        pass
+    })
+
+    if keepages:
+        snapdates = list(snapdates)
+        # everything younger than youngest keepage
+        for d in snapdates:
+            if now - d < keepages[0]:
+                yield d
+
+        # oldest snapshot between each pair of consecutive keepages,
+        # if available
+        for agemin, agemax in zip(keepages, keepages[1:]):
+            candidates = [
+                d
+                for d in snapdates
+                if now - d >= agemin and now - d < agemax
+            ]
+            if candidates:
+                yield min(candidates)
+
 
 def parse_reten_spec(reten_str):
     tokens = iter(reten_str.split())
@@ -94,6 +104,7 @@ def parse_reten_spec(reten_str):
         raise ValueError("empty reten spec")
     return result
 
+
 def parse_dates(snapnames, fmt):
     for snapname in snapnames:
         try:
@@ -101,6 +112,7 @@ def parse_dates(snapnames, fmt):
         except ValueError:
             # ignore snapshots that don't match the date format
             pass
+
 
 def date_filter(keep, input_snapdates, reten, keep_latest):
     input_snapdates = sorted(list(input_snapdates))
@@ -115,6 +127,7 @@ def date_filter(keep, input_snapdates, reten, keep_latest):
         return sorted(keepsnaps | latest)
     else:
         return sorted(set(input_snapdates) - keepsnaps - latest, reverse=True)
+
 
 if __name__ == "__main__":
     args = docopt(__doc__, version='snapshot_date_filter 0.1')
