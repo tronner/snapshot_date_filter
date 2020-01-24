@@ -123,14 +123,14 @@ def date_filter(
     keep_ages = reten_ages(reten)
     keepsnaps = set(gen_keepsnaps(snapdates, keep_ages, now=now))
     try:
-        latest = set(keep_latest * [snapdates[-1]])
+        latest = {snapdates[-1]} if keep_latest else set()
     except IndexError:
         # empty input; nothing to do
         return []
-    younger = set(keep_younger * [
+    younger = {
         d for d in snapdates
         if now - d < min(keep_ages)
-    ])
+    } if keep_younger else set()
 
     if keep:
         return sorted(keepsnaps | latest | younger)
