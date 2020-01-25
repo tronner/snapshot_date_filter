@@ -76,7 +76,7 @@ def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
     snapdates = list(snapdates)
     keepages = sorted(keepages)
 
-    # of the snapshots between each pair of consecutive keepages (if any),
+    # Of the snapshots between each pair of consecutive keepages (if any),
     # yield the oldest snapshot with the highest score as calculated by the
     # preference() helper function
     for agemin, agemax in zip(keepages, keepages[1:]):
@@ -85,10 +85,9 @@ def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
             if agemin <= now - d < agemax:
                 candidates[preference(d)].append(d)
         if candidates:
-            # oldest (min) of candidates with highest (max) preference score
-            yield min(
-                max(candidates.items())[1]
-            )
+            highest = max(candidates)
+            # oldest (min) of candidates with highest preference score
+            yield min(candidates[highest])
 
 
 def parse_reten_spec(reten_str):
