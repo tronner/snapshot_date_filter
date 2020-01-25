@@ -30,6 +30,7 @@ Example:
 
 """
 import sys
+from collections import defaultdict
 from datetime import datetime, timedelta
 from docopt import docopt
 
@@ -42,6 +43,7 @@ reten_intervals = {
     "hour": 3600,
     "day": 3600*24,
     "week": 3600*24*7,
+    "4week": 3600*24*7*4,
     "month": 3600*24*30,
     "year": 3600*24*365,
 }
@@ -61,18 +63,32 @@ def reten_ages(reten):
 
 
 def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
+    def preference(d):
+        # Calculate a preference score for a date.
+        # I like snapshots at the start of hours, days, etc.
+        return sum([
+            8 * (d.minute == 0),
+            4 * (d.hour == 0),
+            2 * (d.day == 1),
+            1 * (d.month == 1)
+        ])
+
     snapdates = list(snapdates)
     keepages = sorted(keepages)
 
-    # oldest snapshot between each pair of consecutive keepages,
-    # if available
+    # of the snapshots between each pair of consecutive keepages (if any),
+    # yield the oldest snapshot with the highest score as calculated by the
+    # preference() helper function
     for agemin, agemax in zip(keepages, keepages[1:]):
-        candidates = [
-            d for d in snapdates
-            if now - d >= agemin and now - d < agemax
-        ]
+        candidates = defaultdict(list)
+        for d in snapdates:
+            if agemin <= now - d < agemax:
+                candidates[preference(d)].append(d)
         if candidates:
-            yield min(candidates)
+            # oldest (min) of candidates with highest (max) preference score
+            yield min(
+                max(candidates.items())[1]
+            )
 
 
 def parse_reten_spec(reten_str):
