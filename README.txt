@@ -3,7 +3,7 @@ snapshot_date_filter
 Reads a list of snapshots on stdin, writes the snapshots to keep or remove
 according to the given date format and retention specification to stdout.
 Snapshots not matching the date format are ignored. Removed snapshots are
-printed in reverse sorted order.
+printed in reverse sorted order. All times are in UTC.
 
 Usage:
   snapshot_date_filter (keep | remove) -f <fmt> -r <reten>
