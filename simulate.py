@@ -9,6 +9,7 @@ Most options work like their counterpart in the main program.
 Usage:
     simulate.py -f <fmt> -r <reten> -i <interval_seconds> [-c | --create]
                 [-l | --keep-latest] [-y | --keep-younger] [-p | --prompt]
+                [-o | --keep-oldest]
     simulate.py (-h | --help | --version | -R | --list-valid-intervals)
 
 Options:
@@ -23,6 +24,7 @@ Options:
                         of the simulation
     -c, --create        Create snapshots at the interval specified by -i
     -l, --keep-latest   Keep latest
+    -o, --keep-oldest   Keep oldest in each slot
     -y, --keep-younger  Keep younger
     -p, --prompt        Waits for <Enter> between runs
 
@@ -33,7 +35,8 @@ import snapshot_date_filter as sdf
 from docopt import docopt
 
 def simulate(
-    snapdates, reten, interval, keep_latest=False, keep_younger=False,
+    snapdates, reten, interval,
+    keep_latest=False, keep_younger=False, keep_oldest=False,
     create=False, prompt=False, now=None
 ):
     snapdates = list(snapdates)
@@ -51,7 +54,8 @@ def simulate(
             sdf.ok_exit("No more snapshots")
         output_dates = sdf.date_filter(
             keep=True, snapdates=snapdates, reten=reten, now=now,
-            keep_latest=keep_latest, keep_younger=keep_younger
+            keep_latest=keep_latest, keep_younger=keep_younger,
+            keep_oldest=keep_oldest
         )
         for output_date in output_dates:
             print(output_date.strftime(fmt))
@@ -84,11 +88,13 @@ if __name__ == "__main__":
         error_exit("-i requires a numeric value")
     create = args["--create"]
     prompt = args["--prompt"]
+    keep_oldest = args["--keep-oldest"]
     input_snapnames = sys.stdin.read().split("\n")
 
     input_snapdates = sdf.parse_dates(input_snapnames, fmt)
 
     simulate(
         input_snapdates, reten, interval, keep_latest=keep_latest,
-        keep_younger=keep_younger, create=create, prompt=prompt
+        keep_younger=keep_younger, keep_oldest=keep_oldest,
+        create=create, prompt=prompt
     )

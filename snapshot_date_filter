@@ -9,6 +9,7 @@ printed in reverse sorted order. All times are in UTC.
 Usage:
   snapshot_date_filter (keep | remove) -f <fmt> -r <reten>
                        [-l | --keep-latest] [-y | --keep-younger]
+                       [-o | --keep-oldest]
   snapshot_date_filter (-h | --help | --version | -R | --list-valid-reten)
 
 Options:
@@ -19,6 +20,7 @@ Options:
   -f <fmt>            Date format string
   -r <reten>          Retention specification (see -R option and example below)
   -l, --keep-latest   Always keep latest snapshot
+  -o, --keep-oldest   Keep oldest snapshot in each slot
   -y, --keep-younger  Keep snapshots younger than the youngest snapshot
                       according to the retention specification
 
@@ -77,7 +79,7 @@ def reten_ages(reten):
     }
 
 
-def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
+def gen_keepsnaps(snapdates, keepages, keep_oldest=False, now=None):
     def preference(d):
         # Calculate a preference score for a date.
         # I like snapshots at the start of hours, days, etc.
@@ -88,6 +90,8 @@ def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
             1 * (d.month == 1)
         ])
 
+    if not now:
+        now=datetime.utcnow()
     snapdates = list(snapdates)
     keepages = sorted(keepages)
 
@@ -100,9 +104,13 @@ def gen_keepsnaps(snapdates, keepages, now=datetime.utcnow()):
             if agemin <= now - d < agemax:
                 candidates[preference(d)].append(d)
         if candidates:
-            highest = max(candidates)
             # oldest (min) of candidates with highest preference score
-            yield min(candidates[highest])
+            slot = { min(candidates[max(candidates)]) }
+
+            if keep_oldest:
+                slot.add(min(min(x) for x in candidates.values()))
+
+            yield from sorted(slot, reverse=True)
 
 
 def list_valid_intervals():
@@ -150,12 +158,14 @@ def parse_dates(snapnames, fmt):
 
 
 def date_filter(
-    keep, snapdates, reten, keep_latest, keep_younger,
-    now=datetime.utcnow()
+    keep, snapdates, reten, keep_latest=False, keep_younger=False,
+    keep_oldest=False, now=datetime.utcnow()
 ):
     snapdates = sorted(list(snapdates))
     keep_ages = reten_ages(reten)
-    keepsnaps = set(gen_keepsnaps(snapdates, keep_ages, now=now))
+    keepsnaps = set(
+        gen_keepsnaps(snapdates, keep_ages, keep_oldest=keep_oldest, now=now)
+    )
     try:
         latest = {snapdates[-1]} if keep_latest else set()
     except IndexError:
@@ -186,12 +196,14 @@ if __name__ == "__main__":
         error_exit(e)
     keep_latest = args["--keep-latest"]
     keep_younger = args["--keep-younger"]
+    keep_oldest = args["--keep-oldest"]
     keep = args["keep"]
     input_snapnames = sys.stdin.read().split("\n")
 
     input_snapdates = parse_dates(input_snapnames, fmt)
     output_snapdates = date_filter(
-        keep, input_snapdates, reten, keep_latest, keep_younger
+        keep, input_snapdates, reten, keep_latest=keep_latest,
+        keep_younger=keep_younger, keep_oldest=keep_oldest
     )
 
     for snapdate in output_snapdates:
